@@ -1,6 +1,8 @@
 **Music rehearsal room system**
 
-System provides us an evidence of music bands and it's players which use music rehearsal room. 
+Written in Java and Spring framework.
+
+System provides an evidence of music bands and it's players which use music rehearsal room. 
 
 Main feature is the ability to display complete schedule of the room.
 Every band, which wants to practise, must be registered, after then there's an option to reserve a free time of the rehearsal's room schedule.
