@@ -1,0 +1,74 @@
+POST http://localhost:8080/players
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{
+  "firstName": "Mick",
+  "lastName": "Thomson",
+  "instrument": "Guitar"
+}
+
+###
+
+POST http://localhost:8080/players
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{
+  "firstName": "Jim",
+  "lastName": "Root",
+  "instrument": "Guitar"
+}
+
+###
+
+GET http://localhost:8080/players
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+###
+
+POST http://localhost:8080/bands
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{"name": "Slipknot", "playerIds":[1, 2]}
+
+###
+
+POST http://localhost:8080/rehearsals/make
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{"startTime": "2020-01-01T15:00", "endTime": "2020-01-01T18:00",  "rehearsalOfBandId":  3}
+
+###
+
+PUT http://localhost:8080/bands/3
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{"name": "Slipknot", "playerIds":[1]}
+
+###
+
+PUT http://localhost:8080/players/2
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{
+  "firstName": "James",
+  "lastName": "Root",
+  "instrument": "Guitar"
+}
+
+###
+
+DELETE http://localhost:8080/players/2
