@@ -23,6 +23,9 @@ public class Band {
         )
     private List<Player> players;
 
+    @Version
+    private Long version;
+
     public Band() {
     }
 
@@ -49,6 +52,10 @@ public class Band {
 
     public void setPlayers(List<Player> players) {
         this.players = players;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

@@ -39,7 +39,7 @@ class RehearsalControllerTest {
     void findById() throws Exception {
         LocalDateTime start = LocalDateTime.parse("2020-01-01T15:00");
         LocalDateTime end = LocalDateTime.parse("2020-01-01T18:00");
-        RehearsalDTO rehearsal = new RehearsalDTO(1, start, end, 0);
+        RehearsalDTO rehearsal = new RehearsalDTO(1, start, end, 0, 0L);
 
         BDDMockito.given(rehearsalServiceMock.findByIdAsDTO(1)).willReturn(Optional.of(rehearsal));
 
@@ -64,8 +64,8 @@ class RehearsalControllerTest {
         Pageable pageable = PageRequest.of(page, size);
 
         List<RehearsalDTO> data = List.of(
-                new RehearsalDTO(5,LocalDateTime.parse("2020-01-01T15:00"), LocalDateTime.parse("2020-01-01T18:00"), 0),
-                new RehearsalDTO(6,LocalDateTime.parse("2020-01-01T20:00"), LocalDateTime.parse("2020-01-01T21:00"), 1)
+                new RehearsalDTO(5,LocalDateTime.parse("2020-01-01T15:00"), LocalDateTime.parse("2020-01-01T18:00"), 0, 0L),
+                new RehearsalDTO(6,LocalDateTime.parse("2020-01-01T20:00"), LocalDateTime.parse("2020-01-01T21:00"), 1, 0L)
         );
 
         Page<RehearsalDTO> pageExpected = new PageImpl<>(data, pageable, total);
@@ -90,8 +90,8 @@ class RehearsalControllerTest {
         Pageable pageable = PageRequest.of(page, size);
 
         List<RehearsalDTO> data = List.of(
-                new RehearsalDTO(5,LocalDateTime.parse("2020-01-01T15:00"), LocalDateTime.parse("2020-01-01T18:00"), 0),
-                new RehearsalDTO(6,LocalDateTime.parse("2020-01-01T20:00"), LocalDateTime.parse("2020-01-01T21:00"), 0)
+                new RehearsalDTO(5,LocalDateTime.parse("2020-01-01T15:00"), LocalDateTime.parse("2020-01-01T18:00"), 0, 0L),
+                new RehearsalDTO(6,LocalDateTime.parse("2020-01-01T20:00"), LocalDateTime.parse("2020-01-01T21:00"), 0, 0L)
         );
 
         Page<RehearsalDTO> pageExpected = new PageImpl<>(data, pageable, total);
@@ -115,7 +115,7 @@ class RehearsalControllerTest {
         LocalDateTime x = LocalDateTime.parse("2020-01-01T15:00");
         LocalDateTime y = LocalDateTime.parse("2020-01-01T18:00");
         RehearsalCreateDTO rehearsalToCreate = new RehearsalCreateDTO(x, y, 0);
-        RehearsalDTO rehearsalExpected = new RehearsalDTO(1, x, y, 0);
+        RehearsalDTO rehearsalExpected = new RehearsalDTO(1, x, y, 0, 0L);
 
         BDDMockito.given(rehearsalServiceMock.create(rehearsalToCreate)).willReturn(rehearsalExpected);
 
@@ -138,9 +138,9 @@ class RehearsalControllerTest {
         LocalDateTime x = LocalDateTime.parse("2020-01-01T15:00");
         LocalDateTime y = LocalDateTime.parse("2020-01-01T18:00");
         RehearsalCreateDTO rehearsalToCreate = new RehearsalCreateDTO(x, y, 0);
-        RehearsalDTO rehearsalExpected = new RehearsalDTO(1, x, y, 0);
+        RehearsalDTO rehearsalExpected = new RehearsalDTO(1, x, y, 0, 0L);
 
-        BDDMockito.given(rehearsalServiceMock.update(1,rehearsalToCreate)).willReturn(rehearsalExpected);
+        BDDMockito.given(rehearsalServiceMock.update(1,rehearsalToCreate, "0")).willReturn(rehearsalExpected);
 
         mockMvc.perform(
                 MockMvcRequestBuilders
@@ -153,7 +153,7 @@ class RehearsalControllerTest {
          .andExpect(MockMvcResultMatchers.jsonPath("$.rehearsalOfBandId", CoreMatchers.is(rehearsalExpected.getRehearsalOfBandId())))
          .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(rehearsalServiceMock, Mockito.atLeastOnce()).update(1, rehearsalToCreate);
+        Mockito.verify(rehearsalServiceMock, Mockito.atLeastOnce()).update(1, rehearsalToCreate, "0");
     }
 
     @Test

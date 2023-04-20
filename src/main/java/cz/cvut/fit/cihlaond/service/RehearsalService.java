@@ -5,9 +5,15 @@ import cz.cvut.fit.cihlaond.DTO.RehearsalDTO;
 import cz.cvut.fit.cihlaond.entity.Band;
 import cz.cvut.fit.cihlaond.entity.Rehearsal;
 import cz.cvut.fit.cihlaond.repository.RehearsalRepository;
+import cz.cvut.fit.cihlaond.service.exceptions.InvalidRehearsalTimeException;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchBandException;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchRehearsalException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,8 +63,7 @@ public class RehearsalService {
         return toDTO(rehearsalRepository.save(rehearsal));
     }
 
-    @Transactional
-    public RehearsalDTO update(int id, RehearsalCreateDTO rehearsalCreateDTO) throws NoSuchRehearsalException, NoSuchBandException {
+    public RehearsalDTO update(int id, RehearsalCreateDTO rehearsalCreateDTO, String ifMatch) throws NoSuchRehearsalException, NoSuchBandException, PreconditionFailedException, UpdateConflictException {
         Optional<Rehearsal> optionalRehearsal = findById(id);
 
         if (optionalRehearsal.isEmpty())
@@ -71,9 +76,18 @@ public class RehearsalService {
 
         Band rehearsalOfBand = optionalRehearsalOfBand.get();
         Rehearsal rehearsal = optionalRehearsal.get();
-        rehearsal.setStartTime(rehearsalCreateDTO.getStartTime());
-        rehearsal.setEndTime(rehearsalCreateDTO.getEndTime());
-        rehearsal.setRehearsalOfBand(rehearsalOfBand);
+
+        if (!ifMatch.equals("\"" + rehearsal.getVersion() + "\""))
+            throw new PreconditionFailedException();
+
+        try {
+            rehearsal.setStartTime(rehearsalCreateDTO.getStartTime());
+            rehearsal.setEndTime(rehearsalCreateDTO.getEndTime());
+            rehearsal.setRehearsalOfBand(rehearsalOfBand);
+            rehearsal = rehearsalRepository.save(rehearsal);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new UpdateConflictException();
+        }
 
         return toDTO(rehearsal);
     }
@@ -93,7 +107,12 @@ public class RehearsalService {
     }
 
     public RehearsalDTO toDTO(Rehearsal rehearsal) {
-        return new RehearsalDTO(rehearsal.getId(), rehearsal.getStartTime(), rehearsal.getEndTime(), rehearsal.getRehearsalOfBand().getId());
+        return new RehearsalDTO(
+                rehearsal.getId(),
+                rehearsal.getStartTime(),
+                rehearsal.getEndTime(),
+                rehearsal.getRehearsalOfBand().getId(),
+                rehearsal.getVersion());
     }
 
     public Optional<RehearsalDTO> toDTO(Optional<Rehearsal> rehearsal) {

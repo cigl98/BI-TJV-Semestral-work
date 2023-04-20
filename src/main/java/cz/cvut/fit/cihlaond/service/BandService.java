@@ -5,9 +5,14 @@ import cz.cvut.fit.cihlaond.DTO.BandDTO;
 import cz.cvut.fit.cihlaond.entity.Band;
 import cz.cvut.fit.cihlaond.entity.Player;
 import cz.cvut.fit.cihlaond.repository.BandRepository;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchBandException;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,27 +63,41 @@ public class BandService {
         return toDTO(bandRepository.save(band));
     }
 
-    @Transactional
-    public BandDTO update(int id, BandCreateDTO bandCreateDTO) throws NoSuchBandException, NoSuchPlayerException {
+    public BandDTO update(int id, BandCreateDTO bandCreateDTO, String ifMatch) throws NoSuchBandException, NoSuchPlayerException, PreconditionFailedException, UpdateConflictException {
         Optional<Band> optionalBand = findById(id);
 
         if (optionalBand.isEmpty())
             throw new NoSuchBandException("No such band.");
 
-        Band band = optionalBand.get();
         List<Player> players = playerService.findByIds(bandCreateDTO.getPlayerIds());
 
         if (players.size() != bandCreateDTO.getPlayerIds().size())
             throw new NoSuchPlayerException("Some players not found.");
 
-        band.setName(bandCreateDTO.getName());
-        band.setPlayers(players);
+        Band band = optionalBand.get();
+
+        if (!ifMatch.equals("\"" + band.getVersion() + "\""))
+            throw new PreconditionFailedException();
+
+        try {
+            band.setName(bandCreateDTO.getName());
+            band.setPlayers(players);
+            band = bandRepository.save(band);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new UpdateConflictException();
+        }
+
         return toDTO(band);
     }
 
     public BandDTO toDTO(Band band) {
-        return new BandDTO(band.getId(), band.getName(),
-                band.getPlayers().stream().map(Player::getId).collect(Collectors.toList()));
+        return new BandDTO(
+                band.getId(),
+                band.getName(),
+                band.getPlayers().stream()
+                        .map(Player::getId)
+                        .collect(Collectors.toList()),
+                band.getVersion());
     }
 
     public Optional<BandDTO> toDTO(Optional<Band> band) {

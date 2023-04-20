@@ -23,6 +23,9 @@ public class Rehearsal {
     @JoinColumn(name = "band_id")
     private Band rehearsalOfBand;
 
+    @Version
+    private Long version;
+
     public Rehearsal() {
     }
 
@@ -58,6 +61,10 @@ public class Rehearsal {
 
     public void setRehearsalOfBand(Band rehearsalOfBand) {
         this.rehearsalOfBand = rehearsalOfBand;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package cz.cvut.fit.cihlaond.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Objects;
 
 public class PlayerDTO {
@@ -8,11 +10,15 @@ public class PlayerDTO {
     private final String lastName;
     private final String instrument;
 
-    public PlayerDTO(int id, String firstName, String lastName, String instrument) {
+    @JsonIgnore
+    private final Long version;
+
+    public PlayerDTO(int id, String firstName, String lastName, String instrument, Long version) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.instrument = instrument;
+        this.version = version;
     }
 
     public int getId() {
@@ -30,6 +36,12 @@ public class PlayerDTO {
     public String getInstrument() {
         return instrument;
     }
+
+
+    public Long getVersion() {
+        return version;
+    }
+
 
     @Override
     public boolean equals(Object o) {

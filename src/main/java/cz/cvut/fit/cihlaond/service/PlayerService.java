@@ -4,9 +4,13 @@ import cz.cvut.fit.cihlaond.DTO.PlayerCreateDTO;
 import cz.cvut.fit.cihlaond.DTO.PlayerDTO;
 import cz.cvut.fit.cihlaond.entity.Player;
 import cz.cvut.fit.cihlaond.repository.PlayerRepository;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,22 +58,37 @@ public class PlayerService {
         ));
     }
 
-    @Transactional
-    public PlayerDTO update(int id, PlayerCreateDTO playerCreateDTO) throws NoSuchPlayerException {
+    public PlayerDTO update(int id, PlayerCreateDTO playerCreateDTO, String ifMatch) throws NoSuchPlayerException, UpdateConflictException, PreconditionFailedException {
         Optional<Player> optionalPlayer = findById(id);
 
         if (optionalPlayer.isEmpty())
             throw new NoSuchPlayerException("No such player.");
 
         Player player = optionalPlayer.get();
-        player.setFirstName(playerCreateDTO.getFirstName());
-        player.setLastName(playerCreateDTO.getLastName());
-        player.setInstrument(playerCreateDTO.getInstrument());
+
+        if (!ifMatch.equals("\"" + player.getVersion() + "\""))
+            throw new PreconditionFailedException();
+
+        try {
+            player.setFirstName(playerCreateDTO.getFirstName());
+            player.setLastName(playerCreateDTO.getLastName());
+            player.setInstrument(playerCreateDTO.getInstrument());
+            player = playerRepository.save(player);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new UpdateConflictException();
+        }
+
         return toDTO(player);
     }
 
     public PlayerDTO toDTO(Player player) {
-        return new PlayerDTO(player.getId(), player.getFirstName(), player.getLastName(), player.getInstrument());
+        return new PlayerDTO(
+                player.getId(),
+                player.getFirstName(),
+                player.getLastName(),
+                player.getInstrument(),
+                player.getVersion()
+        );
     }
 
     public Optional<PlayerDTO> toDTO(Optional<Player> player) {

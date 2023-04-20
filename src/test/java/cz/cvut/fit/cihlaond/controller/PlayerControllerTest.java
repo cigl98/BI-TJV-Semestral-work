@@ -35,7 +35,7 @@ class PlayerControllerTest {
 
     @Test
     void findById() throws Exception {
-        PlayerDTO player = new PlayerDTO(0, "Mick", "Thomson", "Guitar");
+        PlayerDTO player = new PlayerDTO(0, "Mick", "Thomson", "Guitar", 0L);
 
         BDDMockito.given(playerServiceMock.findByIdAsDTO(0)).willReturn(Optional.of(player));
 
@@ -60,8 +60,8 @@ class PlayerControllerTest {
         Pageable pageable = PageRequest.of(page, size);
 
         List<PlayerDTO> data = List.of(
-                new PlayerDTO(0,"Till", "Lindemann", "vocals"),
-                new PlayerDTO(1,"Richard", "Kruspe", "guitar"));
+                new PlayerDTO(0,"Till", "Lindemann", "vocals", 0L),
+                new PlayerDTO(1,"Richard", "Kruspe", "guitar", 0L));
         Page<PlayerDTO> pageExpected = new PageImpl<>(data, pageable, total);
 
         BDDMockito.given(playerServiceMock.findAll(pageable)).willReturn(pageExpected);
@@ -78,7 +78,7 @@ class PlayerControllerTest {
 
         page = 1;
         pageable = PageRequest.of(page, size);
-        data = List.of(new PlayerDTO(2, "Christopher", "Schneider", "drums"));
+        data = List.of(new PlayerDTO(2, "Christopher", "Schneider", "drums", 0L));
         pageExpected = new PageImpl<>(data, pageable, total);
         BDDMockito.given(playerServiceMock.findAll(pageable)).willReturn(pageExpected);
 
@@ -95,7 +95,7 @@ class PlayerControllerTest {
     @Test
     void create() throws Exception {
         PlayerCreateDTO playerToCreate = new PlayerCreateDTO("Mick", "Thomson", "Guitar");
-        PlayerDTO playerExpected = new PlayerDTO(0, "Mick", "Thomson", "Guitar");
+        PlayerDTO playerExpected = new PlayerDTO(0, "Mick", "Thomson", "Guitar", 0L);
 
         BDDMockito.given(playerServiceMock.create(playerToCreate)).willReturn(playerExpected);
 
@@ -116,9 +116,9 @@ class PlayerControllerTest {
     @Test
     void update() throws Exception {
         PlayerCreateDTO playerToCreate = new PlayerCreateDTO("Mick", "Thomson", "violin");
-        PlayerDTO playerExpected = new PlayerDTO(0, "Mick", "Thomson", "violin");
+        PlayerDTO playerExpected = new PlayerDTO(0, "Mick", "Thomson", "violin", 0L);
 
-        BDDMockito.given(playerServiceMock.update(0, playerToCreate)).willReturn(playerExpected);
+        BDDMockito.given(playerServiceMock.update(0, playerToCreate, "0")).willReturn(playerExpected);
 
         mockMvc.perform(
                 MockMvcRequestBuilders
@@ -131,7 +131,7 @@ class PlayerControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.instrument", CoreMatchers.is(playerExpected.getInstrument())))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(playerServiceMock, Mockito.atLeastOnce()).update(0, playerToCreate);
+        Mockito.verify(playerServiceMock, Mockito.atLeastOnce()).update(0, playerToCreate, "0");
     }
 
     @Test

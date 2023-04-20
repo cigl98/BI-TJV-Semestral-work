@@ -1,5 +1,7 @@
 package cz.cvut.fit.cihlaond.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -9,11 +11,15 @@ public class RehearsalDTO {
     private final LocalDateTime endTime;
     private final Integer rehearsalOfBandId;
 
-    public RehearsalDTO(int id, LocalDateTime startTime, LocalDateTime endTime, Integer rehearsalOfBandId) {
+    @JsonIgnore
+    private final Long version;
+
+    public RehearsalDTO(int id, LocalDateTime startTime, LocalDateTime endTime, Integer rehearsalOfBandId, Long version) {
         this.id = id;
         this.startTime = startTime;
         this.endTime = endTime;
         this.rehearsalOfBandId = rehearsalOfBandId;
+        this.version = version;
     }
 
     public int getId() {
@@ -30,6 +36,10 @@ public class RehearsalDTO {
 
     public Integer getRehearsalOfBandId() {
         return rehearsalOfBandId;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

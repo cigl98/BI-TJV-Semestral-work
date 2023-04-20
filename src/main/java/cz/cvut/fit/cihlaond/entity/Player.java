@@ -5,6 +5,7 @@ import com.sun.istack.NotNull;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Version;
 import java.util.Objects;
 
 @Entity
@@ -21,6 +22,10 @@ public class Player {
     private String lastName;
 
     private String instrument;
+
+    @Version
+    @NotNull
+    private Long version;
 
     public Player() {
     }
@@ -58,6 +63,11 @@ public class Player {
     public void setInstrument(String instrument) {
         this.instrument = instrument;
     }
+
+    public Long getVersion() {
+        return version;
+    }
+
 
     @Override
     public boolean equals(Object o) {

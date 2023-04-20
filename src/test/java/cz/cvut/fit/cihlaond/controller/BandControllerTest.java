@@ -35,7 +35,7 @@ class BandControllerTest {
 
     @Test
     void findById() throws Exception {
-        BandDTO band = new BandDTO(5,"Slipknot", List.of(0, 1));
+        BandDTO band = new BandDTO(5,"Slipknot", List.of(0, 1), 0L);
 
         BDDMockito.given(bandServiceMock.findByIdAsDTO(5)).willReturn(Optional.of(band));
 
@@ -59,8 +59,8 @@ class BandControllerTest {
         Pageable pageable = PageRequest.of(page, size);
 
         List<BandDTO> data = List.of(
-                new BandDTO(5,"Slipknot", List.of(0, 1)),
-                new BandDTO(6,"Rammstein", List.of(2, 3))
+                new BandDTO(5,"Slipknot", List.of(0, 1), 0L),
+                new BandDTO(6,"Rammstein", List.of(2, 3), 0L)
         );
 
         Page<BandDTO> pageExpected = new PageImpl<>(data, pageable, total);
@@ -79,7 +79,7 @@ class BandControllerTest {
 
     @Test
     void findByName() throws Exception {
-        BandDTO band = new BandDTO(5,"Slipknot", List.of(0, 1));
+        BandDTO band = new BandDTO(5,"Slipknot", List.of(0, 1), 0L);
 
         BDDMockito.given(bandServiceMock.findByName("Slipknot")).willReturn(Optional.of(band));
 
@@ -98,7 +98,7 @@ class BandControllerTest {
     @Test
     void create() throws Exception {
         BandCreateDTO bandToCreate = new BandCreateDTO("Slipknot", List.of(0, 1));
-        BandDTO bandExpected =  new BandDTO(5,"Slipknot", List.of(0, 1));
+        BandDTO bandExpected =  new BandDTO(5,"Slipknot", List.of(0, 1), 0L);
         BDDMockito.given(bandServiceMock.create(bandToCreate)).willReturn(bandExpected);
 
         mockMvc.perform(
@@ -116,8 +116,8 @@ class BandControllerTest {
     @Test
     void update() throws Exception {
         BandCreateDTO bandToCreate = new BandCreateDTO("Slipknot", List.of(0, 2));
-        BandDTO bandExpected =  new BandDTO(5,"Slipknot", List.of(0, 2));
-        BDDMockito.given(bandServiceMock.update(5, bandToCreate)).willReturn(bandExpected);
+        BandDTO bandExpected =  new BandDTO(5,"Slipknot", List.of(0, 2), 0L);
+        BDDMockito.given(bandServiceMock.update(5, bandToCreate, "0")).willReturn(bandExpected);
 
         mockMvc.perform(
                 MockMvcRequestBuilders
@@ -128,7 +128,7 @@ class BandControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.playerIds", CoreMatchers.is(bandExpected.getPlayerIds())))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(bandServiceMock, Mockito.atLeastOnce()).update(5, bandToCreate);
+        Mockito.verify(bandServiceMock, Mockito.atLeastOnce()).update(5, bandToCreate, "0");
     }
 
     @Test

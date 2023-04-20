@@ -3,14 +3,23 @@ package cz.cvut.fit.cihlaond.controller;
 import cz.cvut.fit.cihlaond.DTO.BandCreateDTO;
 import cz.cvut.fit.cihlaond.DTO.BandDTO;
 import cz.cvut.fit.cihlaond.service.BandService;
-import cz.cvut.fit.cihlaond.service.NoSuchBandException;
-import cz.cvut.fit.cihlaond.service.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.ETagService;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchBandException;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
+
 
 @RestController
 @RequestMapping(value = "/bands")
@@ -24,35 +33,48 @@ public class BandController {
     }
 
     @GetMapping("/{id}")
-    public BandDTO findById(@PathVariable int id) {
-        return bandService.findByIdAsDTO(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public HttpEntity<BandDTO> findById(@PathVariable int id) {
+        Optional<BandDTO> bandDTO = bandService.findByIdAsDTO(id);
+        if (bandDTO.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).eTag(ETagService.etagFromVersion(bandDTO.get().getVersion())).body(bandDTO.get());
     }
 
     @GetMapping
-    public Page<BandDTO> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        return bandService.findAll(PageRequest.of(page, size));
+    public HttpEntity<Page<BandDTO>> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.status(HttpStatus.OK).body(bandService.findAll(PageRequest.of(page, size)));
     }
 
     @GetMapping(params = "name")
-    public BandDTO findByName(@RequestParam String name) {
-        return bandService.findByName(name).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public HttpEntity<BandDTO> findByName(@RequestParam String name) {
+        Optional<BandDTO> bandDTO = bandService.findByName(name);
+        if (bandDTO.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).eTag(ETagService.etagFromVersion(bandDTO.get().getVersion())).body(bandDTO.get());
     }
 
     @PostMapping
-    public BandDTO create(@RequestBody BandCreateDTO band) {
+    public HttpEntity<BandDTO> create(@RequestBody BandCreateDTO band) {
         try {
-            return bandService.create(band);
+            BandDTO createdBand = bandService.create(band);
+            return ResponseEntity.status(HttpStatus.OK).eTag(ETagService.etagFromVersion(createdBand.getVersion())).body(createdBand);
         } catch (NoSuchPlayerException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
     @PutMapping("/{id}")
-    public BandDTO update(@PathVariable int id, @RequestBody BandCreateDTO band) {
+    public HttpEntity<BandDTO> update(@PathVariable int id, @RequestBody BandCreateDTO band,
+                          @RequestHeader(name = HttpHeaders.IF_MATCH) String ifMatch) {
         try {
-            return bandService.update(id ,band);
+            BandDTO updatedBand = bandService.update(id ,band, ifMatch);
+            return ResponseEntity.status(HttpStatus.OK).eTag(ETagService.etagFromVersion(updatedBand.getVersion())).body(bandService.update(id ,band, ifMatch));
         } catch (NoSuchBandException | NoSuchPlayerException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (PreconditionFailedException e) {
+            return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
+        } catch (UpdateConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 

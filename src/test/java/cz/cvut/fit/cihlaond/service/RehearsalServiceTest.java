@@ -6,10 +6,14 @@ import cz.cvut.fit.cihlaond.entity.Band;
 import cz.cvut.fit.cihlaond.entity.Player;
 import cz.cvut.fit.cihlaond.entity.Rehearsal;
 import cz.cvut.fit.cihlaond.repository.RehearsalRepository;
+import cz.cvut.fit.cihlaond.service.exceptions.InvalidRehearsalTimeException;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchBandException;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchRehearsalException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -78,8 +82,8 @@ class RehearsalServiceTest {
         BDDMockito.given(rehearsalRepositoryMock.findAllByRehearsalOfBandName("Slipknot", Pageable.unpaged())).willReturn(pageExpected);
 
         List<RehearsalDTO> returnedList = rehearsalService.findAllByRehearsalOfBandName("Slipknot", Pageable.unpaged()).getContent();
-        List<RehearsalDTO> expectedList = List.of(new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T15:00:00"), LocalDateTime.parse("2020-01-01T18:00:00"), 5),
-                new RehearsalDTO(4, LocalDateTime.parse("2020-02-01T15:00:00"), LocalDateTime.parse("2020-02-01T18:00:00"), 5));
+        List<RehearsalDTO> expectedList = List.of(new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T15:00:00"), LocalDateTime.parse("2020-01-01T18:00:00"), 5, 0L),
+                new RehearsalDTO(4, LocalDateTime.parse("2020-02-01T15:00:00"), LocalDateTime.parse("2020-02-01T18:00:00"), 5, 0L));
 
         assertFalse(returnedList.isEmpty());
         assertEquals(expectedList, returnedList);
@@ -105,7 +109,7 @@ class RehearsalServiceTest {
         BDDMockito.given(bandServiceMock.findById(5)).willReturn(Optional.of(bandSlipknot));
 
         RehearsalDTO returnedRehearsalDTO = rehearsalService.create(rehearsalCreateDTO);
-        RehearsalDTO expectedRehearsalDTO = new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T15:00:00"), LocalDateTime.parse("2020-01-01T18:00:00"), 5);
+        RehearsalDTO expectedRehearsalDTO = new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T15:00:00"), LocalDateTime.parse("2020-01-01T18:00:00"), 5, 0L);
         assertEquals(returnedRehearsalDTO, expectedRehearsalDTO);
 
         ArgumentCaptor<Rehearsal> argumentCaptor = ArgumentCaptor.forClass(Rehearsal.class);
@@ -117,7 +121,7 @@ class RehearsalServiceTest {
     }
 
     @Test
-    void update() throws NoSuchRehearsalException, NoSuchBandException {
+    void update() throws NoSuchRehearsalException, NoSuchBandException, UpdateConflictException, PreconditionFailedException {
         Player playerMick = new Player("Mick", "Thomson", "Guitar");
         ReflectionTestUtils.setField(playerMick, "id", 0);
         Player playerJoey = new Player("Joey", "Jordison", "Drums");
@@ -133,9 +137,9 @@ class RehearsalServiceTest {
         BDDMockito.given(rehearsalRepositoryMock.findById(3)).willReturn(Optional.of(rehearsalSlipknot1));
         BDDMockito.given(bandServiceMock.findById(5)).willReturn(Optional.of(bandSlipknot));
 
-        RehearsalDTO expectedRehearsalDTO = new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T20:00:00"), LocalDateTime.parse("2020-01-01T23:00:00"), 5);
+        RehearsalDTO expectedRehearsalDTO = new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T20:00:00"), LocalDateTime.parse("2020-01-01T23:00:00"), 5, 0L);
 
-        RehearsalDTO returnedRehearsalDTO = rehearsalService.update(3, rehearsalCreateDTO);
+        RehearsalDTO returnedRehearsalDTO = rehearsalService.update(3, rehearsalCreateDTO, "0");
 
         assertEquals(expectedRehearsalDTO, returnedRehearsalDTO);
         Mockito.verify(rehearsalRepositoryMock, Mockito.atLeastOnce()).findById(3);
@@ -190,8 +194,8 @@ class RehearsalServiceTest {
         BDDMockito.given(rehearsalRepositoryMock.findAll(Pageable.unpaged())).willReturn(pageExpected);
 
         List<RehearsalDTO> returnedList = rehearsalService.findAll(Pageable.unpaged()).getContent();
-        List<RehearsalDTO> expectedList = List.of(new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T15:00:00"), LocalDateTime.parse("2020-01-01T18:00:00"), 5),
-                new RehearsalDTO(4, LocalDateTime.parse("2020-02-01T15:00:00"), LocalDateTime.parse("2020-02-01T18:00:00"), 5));
+        List<RehearsalDTO> expectedList = List.of(new RehearsalDTO(3, LocalDateTime.parse("2020-01-01T15:00:00"), LocalDateTime.parse("2020-01-01T18:00:00"), 5, 0L),
+                new RehearsalDTO(4, LocalDateTime.parse("2020-02-01T15:00:00"), LocalDateTime.parse("2020-02-01T18:00:00"), 5, 0L));
 
         assertFalse(returnedList.isEmpty());
         assertEquals(expectedList, returnedList);

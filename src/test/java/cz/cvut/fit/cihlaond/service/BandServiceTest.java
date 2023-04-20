@@ -5,6 +5,10 @@ import cz.cvut.fit.cihlaond.DTO.BandDTO;
 import cz.cvut.fit.cihlaond.entity.Band;
 import cz.cvut.fit.cihlaond.entity.Player;
 import cz.cvut.fit.cihlaond.repository.BandRepository;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchBandException;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
@@ -70,7 +74,7 @@ class BandServiceTest {
         Optional<BandDTO> optionalReturnedBandDTO = bandService.findByName("Slipknot");
         assertFalse(optionalReturnedBandDTO.isEmpty());
 
-        BandDTO expectedBandDTO = new BandDTO(5, "Slipknot", List.of(0, 1));
+        BandDTO expectedBandDTO = new BandDTO(5, "Slipknot", List.of(0, 1), 0L);
         BandDTO returnedBandDTO = optionalReturnedBandDTO.get();
         assertEquals(returnedBandDTO, expectedBandDTO);
         Mockito.verify(bandRepositoryMock, Mockito.atLeastOnce()).findByName("Slipknot");
@@ -92,7 +96,7 @@ class BandServiceTest {
         BDDMockito.given(playerServiceMock.findByIds(List.of(0, 1))).willReturn(List.of(playerMick, playerJoey));
 
         BandDTO returnedBandDTO = bandService.create(bandCreateDTO);
-        BandDTO expectedBandDTO = new BandDTO(5, "Slipknot", List.of(0, 1));
+        BandDTO expectedBandDTO = new BandDTO(5, "Slipknot", List.of(0, 1), 0L);
         assertEquals(expectedBandDTO, returnedBandDTO);
 
         ArgumentCaptor<Band> argumentCaptor = ArgumentCaptor.forClass(Band.class);
@@ -105,7 +109,7 @@ class BandServiceTest {
     }
 
     @Test
-    void update() throws NoSuchBandException, NoSuchPlayerException {
+    void update() throws NoSuchBandException, NoSuchPlayerException, UpdateConflictException, PreconditionFailedException {
         Player playerMick = new Player("Mick", "Thomson", "Guitar");
         ReflectionTestUtils.setField(playerMick, "id", 0);
         Player playerJoey = new Player("Joey", "Jordison", "Drums");
@@ -114,13 +118,14 @@ class BandServiceTest {
         Band bandSlipknot = new Band("Slipknot", players);
         ReflectionTestUtils.setField(bandSlipknot, "id", 5);
 
+
         BandCreateDTO bandCreateDTO = new BandCreateDTO("Stone Sour", List.of(0, 1));
         BDDMockito.given(bandRepositoryMock.findById(5)).willReturn(Optional.of(bandSlipknot));
         BDDMockito.given(playerServiceMock.findByIds(List.of(0, 1))).willReturn(List.of(playerMick, playerJoey));
 
-        BandDTO expectedBandDTO = new BandDTO(5, "Stone Sour", List.of(0, 1));
+        BandDTO expectedBandDTO = new BandDTO(5, "Stone Sour", List.of(0, 1), 0L);
 
-        BandDTO returnedBandDTO = bandService.update(5, bandCreateDTO);
+        BandDTO returnedBandDTO = bandService.update(5, bandCreateDTO, "0");
         assertEquals(expectedBandDTO, returnedBandDTO);
 
         Mockito.verify(bandRepositoryMock, Mockito.atLeastOnce()).findById(bandSlipknot.getId());

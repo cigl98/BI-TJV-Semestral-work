@@ -2,14 +2,31 @@ package cz.cvut.fit.cihlaond.controller;
 
 import cz.cvut.fit.cihlaond.DTO.PlayerCreateDTO;
 import cz.cvut.fit.cihlaond.DTO.PlayerDTO;
-import cz.cvut.fit.cihlaond.service.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.ETagService;
 import cz.cvut.fit.cihlaond.service.PlayerService;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
+
 
 @RestController
 @RequestMapping(value = "/players")
@@ -23,27 +40,37 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public PlayerDTO findById(@PathVariable int id) {
-        return playerService.findByIdAsDTO(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public HttpEntity<PlayerDTO> findById(@PathVariable int id) {
+        Optional<PlayerDTO> playerDTO = playerService.findByIdAsDTO(id);
+        if (playerDTO.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).eTag(ETagService.etagFromVersion(playerDTO.get().getVersion())).body(playerDTO.get());
     }
 
     @GetMapping
-    public Page<PlayerDTO> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        return playerService.findAll(PageRequest.of(page, size));
+    public HttpEntity<Page<PlayerDTO>> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.status(HttpStatus.OK).body(playerService.findAll(PageRequest.of(page, size)));
     }
 
     @PostMapping
-    public PlayerDTO create(@RequestBody PlayerCreateDTO player) {
-        return playerService.create(player);
+    public HttpEntity<PlayerDTO> create(@RequestBody PlayerCreateDTO player) {
+        PlayerDTO createdPlayer = playerService.create(player);
+        return ResponseEntity.status(HttpStatus.OK).eTag(ETagService.etagFromVersion(createdPlayer.getVersion())).body(createdPlayer);
     }
 
     @PutMapping("/{id}")
-    public PlayerDTO update(@PathVariable int id, @RequestBody PlayerCreateDTO player) {
+    public HttpEntity<PlayerDTO> update(@PathVariable int id, @RequestBody PlayerCreateDTO player,
+                                        @RequestHeader(name = HttpHeaders.IF_MATCH) String ifMatch) {
 
         try {
-            return playerService.update(id, player);
+            PlayerDTO updatedPlayer = playerService.update(id, player, ifMatch);
+            return ResponseEntity.status(HttpStatus.OK).eTag(ETagService.etagFromVersion(updatedPlayer.getVersion())).body(updatedPlayer);
         } catch (NoSuchPlayerException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (PreconditionFailedException e) {
+            return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
+        } catch (UpdateConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 
@@ -51,5 +78,4 @@ public class PlayerController {
     public void delete(@PathVariable int id) {
         playerService.deleteById(id);
     }
-
 }

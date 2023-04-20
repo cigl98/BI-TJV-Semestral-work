@@ -1,5 +1,7 @@
 package cz.cvut.fit.cihlaond.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -8,10 +10,14 @@ public class BandDTO {
     private final String name;
     private final List<Integer> playerIds;
 
-    public BandDTO(int id, String name, List<Integer> playerIds) {
+    @JsonIgnore
+    private final Long version;
+
+    public BandDTO(int id, String name, List<Integer> playerIds, Long version) {
         this.id = id;
         this.name = name;
         this.playerIds = playerIds;
+        this.version = version;
     }
 
     public int getId() {
@@ -25,6 +31,12 @@ public class BandDTO {
     public List<Integer> getPlayerIds() {
         return playerIds;
     }
+
+
+    public Long getVersion() {
+        return version;
+    }
+
 
     @Override
     public boolean equals(Object o) {

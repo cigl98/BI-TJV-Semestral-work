@@ -4,6 +4,9 @@ import cz.cvut.fit.cihlaond.DTO.PlayerCreateDTO;
 import cz.cvut.fit.cihlaond.DTO.PlayerDTO;
 import cz.cvut.fit.cihlaond.entity.Player;
 import cz.cvut.fit.cihlaond.repository.PlayerRepository;
+import cz.cvut.fit.cihlaond.service.exceptions.NoSuchPlayerException;
+import cz.cvut.fit.cihlaond.service.exceptions.PreconditionFailedException;
+import cz.cvut.fit.cihlaond.service.exceptions.UpdateConflictException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
@@ -121,7 +124,7 @@ class PlayerServiceTest {
 
         PlayerDTO returnedPlayerDTO = playerService.create(playerCreateDTO);
 
-        PlayerDTO expectedPlayerDTO = new PlayerDTO(5, "Mick", "Thomson", "Guitar");
+        PlayerDTO expectedPlayerDTO = new PlayerDTO(5, "Mick", "Thomson", "Guitar", 0L);
         assertEquals(expectedPlayerDTO, returnedPlayerDTO);
 
         ArgumentCaptor<Player> argumentCaptor = ArgumentCaptor.forClass(Player.class);
@@ -133,14 +136,14 @@ class PlayerServiceTest {
     }
 
     @Test
-    void update() throws NoSuchPlayerException {
+    void update() throws NoSuchPlayerException, UpdateConflictException, PreconditionFailedException {
         Player playerMick = new Player("Mick", "Thomson", "Guitar");
         ReflectionTestUtils.setField(playerMick, "id", 0);
         PlayerCreateDTO playerCreateDTO = new PlayerCreateDTO("Mick", "Thomson", "Electric guitar");
         BDDMockito.given(playerRepositoryMock.findById(0)).willReturn(Optional.of(playerMick));
-        PlayerDTO expectedPlayerDTO = new PlayerDTO(0, "Mick", "Thomson", "Electric guitar");
+        PlayerDTO expectedPlayerDTO = new PlayerDTO(0, "Mick", "Thomson", "Electric guitar", 0L);
 
-        PlayerDTO returnedPlayerDTO = playerService.update(0, playerCreateDTO);
+        PlayerDTO returnedPlayerDTO = playerService.update(0, playerCreateDTO, "0");
         assertEquals(expectedPlayerDTO, returnedPlayerDTO);
         Mockito.verify(playerRepositoryMock, Mockito.atLeastOnce()).findById(0);
 
