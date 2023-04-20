@@ -77,7 +77,7 @@ public class RehearsalService {
         Band rehearsalOfBand = optionalRehearsalOfBand.get();
         Rehearsal rehearsal = optionalRehearsal.get();
 
-        if (!ifMatch.equals("\"" + rehearsal.getVersion() + "\""))
+        if (!ifMatch.equals(ETagService.etagFromVersion(rehearsal.getVersion())))
             throw new PreconditionFailedException();
 
         try {

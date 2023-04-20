@@ -1,4 +1,6 @@
-**Music rehearsal room system**
+***Music rehearsal room system***
+
+**Update** -  Added concurrency control - conditional PUT, by implementing strong ETag. All PUT requests must contain *If-Match* header with corresponding version of entity to update.
 
 Written in Java and Spring framework.
 

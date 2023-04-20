@@ -76,7 +76,7 @@ public class BandService {
 
         Band band = optionalBand.get();
 
-        if (!ifMatch.equals("\"" + band.getVersion() + "\""))
+        if (!ifMatch.equals(ETagService.etagFromVersion(band.getVersion())))
             throw new PreconditionFailedException();
 
         try {

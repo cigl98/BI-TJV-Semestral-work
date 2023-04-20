@@ -66,7 +66,7 @@ public class PlayerService {
 
         Player player = optionalPlayer.get();
 
-        if (!ifMatch.equals("\"" + player.getVersion() + "\""))
+        if (!ifMatch.equals(ETagService.etagFromVersion(player.getVersion())))
             throw new PreconditionFailedException();
 
         try {
